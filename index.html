@@ -1,150 +1,231 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
+<html>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Pruebas con WebGL</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-  </head>
-  <body>
-    <div id="unity-container" class="unity-desktop">
-      <div id="unity-fullscreen-container">
-        <canvas id="unity-canvas" width="960" height="600" tabindex="-1"></canvas>
-        <div id="unity-loading-container">
-          <div id="unity-loading-bar">
-            <div id="unity-logo"></div>
-            <div id="unity-progress-bar-empty">
-              <div id="unity-progress-bar-full"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Pruebas con WebGL</div>
-      </div>
-    </div>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Experience</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+    <script src="./mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.21.0/meshopt_decoder.js"></script>
     <script>
-      let canvas = document.querySelector("#unity-canvas");
-      let fullscreenContainer = document.querySelector("#unity-fullscreen-container");
+        (function() {
+            function installMeshoptPatch() {
+                if (!window.THREE || !THREE.GLTFLoader || !THREE.GLTFLoader.prototype || THREE.GLTFLoader.prototype.__meshoptPatched) {
+                    return false;
+                }
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
+                const originalLoad = THREE.GLTFLoader.prototype.load;
+                THREE.GLTFLoader.prototype.load = function(url, onLoad, onProgress, onError) {
+                    const loader = this;
+                    const loadModel = function() {
+                        return originalLoad.call(loader, url, onLoad, onProgress, onError);
+                    };
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Prueba 11.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/Prueba 11.data",
-        frameworkUrl: buildUrl + "/Prueba 11.framework.js",
-        codeUrl: buildUrl + "/Prueba 11.wasm",
-        streamingAssetsUrl: "StreamingAssets",
+                    if (typeof MeshoptDecoder !== 'undefined' && typeof loader.setMeshoptDecoder === 'function') {
+                        MeshoptDecoder.ready.then(function() {
+                            loader.setMeshoptDecoder(MeshoptDecoder);
+                            loadModel();
+                        }).catch(function(error) {
+                            console.warn('Meshopt decoder no pudo inicializarse en A-Frame:', error);
+                            loadModel();
+                        });
+                        return;
+                    }
 
-        // If you have a custom web site structure, or want to place multiple Unity build instances on the same page,
-        // you can pass fullscreenElementID: "my-unity-fullscreen-container-id", in this configuration field to
-        // explicitly point to the element tree root that is displayed in fullscreen mode.
-        fullscreenElementID: "unity-fullscreen-container",
-
-        companyName: "DefaultCompany",
-        productName: "Pruebas con WebGL",
-        productVersion: "0.1.0",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
-
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
-      } else {
-        // Desktop style: Render the game canvas container in a window that can be maximized to fullscreen:
-        fullscreenContainer.style.width = "960px";
-        fullscreenContainer.style.height = "600px";
-      }
-
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        const loadingContainer = document.querySelector("#unity-loading-container");
-        const progressBarFull = document.querySelector("#unity-progress-bar-full");
-
-        createUnityInstance(canvas, config, (progress) => {
-          if (progress < 1) {
-            loadingContainer.style.display = "block";
-            progressBarFull.style.width = 100 * progress + "%";
-          } else {
-            loadingContainer.style.display = "none";
-          }
-        }).then((unityInstance) => {
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
+                    return loadModel();
                 };
 
-              }).catch((message) => {
-                alert(message);
-              });
+                THREE.GLTFLoader.prototype.__meshoptPatched = true;
+                return true;
+            }
+
+            installMeshoptPatch();
+            document.addEventListener('DOMContentLoaded', installMeshoptPatch);
+        })();
+    </script>
+</head>
+<body>
+    <a-scene mindar-image="imageTargetSrc: ./marker.mind; maxTrack: 1; autoStart: false; uiError:no; uiLoading:no; uiScanning:no;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; toneMapping: ACESFilmic;" gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.7/;">
+        <a-assets timeout="30000">
+            <video id="ar-video-1" data-target-index="0" src="./video_1.mp4" loop muted playsinline crossorigin="anonymous"></video>
+            
+            <img id="ar-image-1" src="./image_1.png" crossorigin="anonymous">
+<img id="ar-image-2" src="./image_2.png" crossorigin="anonymous">
+            
+            
+        </a-assets>
+        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="far: 10000; objects: .clickable"></a-camera>
+        
+        <a-entity id="ar-target" data-webar-target data-target-index="0" mindar-image-target="targetIndex: 0">
+            
+            
+            
+            <a-plane
+                src="#ar-video-1"
+                position="0 0 0.1"
+                rotation="0 0 0"
+                height="0.68"
+                width="1.208888888888889"
+            ></a-plane>
+            <a-plane src="#ar-image-1" material="transparent: true; alphaTest: 0.01; side: double"
+            position="-0.66 -0.04 0.16"
+            rotation="0 0 0"
+            height="0.63" width="0.5136101694915255"></a-plane>
+<a-plane src="#ar-image-2" material="transparent: true; alphaTest: 0.01; side: double"
+            position="0 -0.06 0"
+            rotation="0 0 0"
+            height="0.79" width="1.4044444444444444"></a-plane>
+            
+        </a-entity>
+    </a-scene>
+    
+    <style>
+        .webar-video-controls {
+            position: fixed;
+            left: 50%;
+            bottom: max(18px, env(safe-area-inset-bottom));
+            z-index: 10020;
+            display: flex;
+            width: min(94vw, 430px);
+            gap: 10px;
+            padding: 8px;
+            transform: translateX(-50%);
+            border: 1px solid rgba(255,255,255,.24);
+            border-radius: 8px;
+            background: rgba(8,15,22,.88);
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+        .webar-video-controls button {
+            flex: 1;
+            min-height: 46px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 6px;
+            color: #fff;
+            background: #1d4ed8;
+            font: 700 14px/1.2 system-ui, sans-serif;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .webar-video-controls button:last-child {
+            background: #126b55;
+        }
+        .webar-video-controls button:focus-visible {
+            outline: 3px solid #fff;
+            outline-offset: 2px;
+        }
+    </style>
+    <div class="webar-video-controls" role="group" aria-label="Controles de video">
+        <button id="webar-video-play" type="button">Pausar video</button>
+        <button id="webar-video-sound" type="button">Activar sonido</button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const arTargets = Array.from(document.querySelectorAll('[data-webar-target]'));
+            const videos = Array.from(document.querySelectorAll('video[id^="ar-video-"]'));
+            const playButton = document.querySelector('#webar-video-play');
+            const soundButton = document.querySelector('#webar-video-sound');
+
+            const playVideos = () => Promise.all(videos.map(video => video.play().catch(error => {
+                console.warn('El navegador requiere interacción para reproducir el video.', error);
+            })));
+            const pauseVideos = () => videos.forEach(video => video.pause());
+            const updateLabels = () => {
+                if (playButton) {
+                    playButton.textContent = videos.some(video => video.paused) ? 'Reproducir video' : 'Pausar video';
+                }
+                if (soundButton) {
+                    soundButton.textContent = videos.every(video => video.muted) ? 'Activar sonido' : 'Silenciar sonido';
+                }
             };
 
-      document.body.appendChild(script);
+            arTargets.forEach(target => {
+                const targetIndex = Number(target.dataset.targetIndex || 0);
+                const targetVideos = () => videos.filter(video => Number(video.dataset.targetIndex || 0) === targetIndex);
+                target.addEventListener('targetFound', () => {
+                    Promise.all(targetVideos().map(video => video.play().catch(error => {
+                        console.warn('El navegador requiere interacción para reproducir el video.', error);
+                    }))).finally(updateLabels);
+                });
+                target.addEventListener('targetLost', () => {
+                    targetVideos().forEach(video => video.pause());
+                    updateLabels();
+                });
+            });
 
+            playButton?.addEventListener('click', event => {
+                event.stopPropagation();
+                const shouldPlay = videos.some(video => video.paused);
+                (shouldPlay ? playVideos() : Promise.resolve(pauseVideos())).finally(updateLabels);
+            });
+
+            soundButton?.addEventListener('click', event => {
+                event.stopPropagation();
+                const shouldEnableSound = videos.every(video => video.muted);
+                videos.forEach(video => {
+                    video.muted = !shouldEnableSound;
+                    video.volume = 1;
+                });
+                if (shouldEnableSound) {
+                    playVideos().finally(updateLabels);
+                } else {
+                    updateLabels();
+                }
+            });
+
+            videos.forEach(video => {
+                video.setAttribute('playsinline', '');
+                video.setAttribute('webkit-playsinline', '');
+                video.addEventListener('play', updateLabels);
+                video.addEventListener('pause', updateLabels);
+                video.addEventListener('volumechange', updateLabels);
+            });
+            updateLabels();
+        });
     </script>
-  </body>
+    
+    <script>
+    (() => {
+        const config = {"exposure":1,"toneMapping":"aces"};
+        const apply = () => {
+            const scene = document.querySelector('a-scene');
+            const renderer = scene?.renderer;
+            const three = window.AFRAME?.THREE || window.THREE;
+            if (!renderer || !three) return false;
+            renderer.toneMapping = config.toneMapping === 'linear'
+                ? three.NoToneMapping
+                : config.toneMapping === 'neutral'
+                    ? three.NeutralToneMapping
+                    : three.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = Number(config.exposure || 1);
+            if (three.SRGBColorSpace) renderer.outputColorSpace = three.SRGBColorSpace;
+            return true;
+        };
+        const scene = document.querySelector('a-scene');
+        if (!apply()) {
+            scene?.addEventListener('renderstart', apply, { once: true });
+            scene?.addEventListener('loaded', apply, { once: true });
+            window.setTimeout(apply, 250);
+        }
+    })();
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sceneEl = document.querySelector('a-scene');
+            let arSystemRunning = false;
+            
+            sceneEl.addEventListener('loaded', function () {
+                const arSystem = sceneEl.systems['mindar-image-system'];
+                if (arSystem && arSystem.start && !arSystemRunning) {
+                    arSystem.start();
+                    arSystemRunning = true;
+                }
+                
+            });
+        });
+    </script>
+</body>
 </html>

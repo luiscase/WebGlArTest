@@ -1,0 +1,124 @@
+{
+  "assetType": "mixed_media",
+  "markerTargetCount": 1,
+  "lightSettings": {
+    "exposure": 1,
+    "ambientIntensity": 0.5,
+    "ambientColor": "#ffffff",
+    "directionalIntensity": 1,
+    "directionalColor": "#ffffff",
+    "hemisphereIntensity": 0.35,
+    "hemisphereSkyColor": "#dbeafe",
+    "hemisphereGroundColor": "#1f2937",
+    "toneMapping": "aces",
+    "lightPosition": {
+      "x": 1,
+      "y": 1,
+      "z": 5
+    }
+  },
+  "modelSettings": {
+    "camera-controls": "on",
+    "auto-rotate": "on",
+    "exposure": "1",
+    "ambient-intensity": "0.5",
+    "ambient-color": "#ffffff",
+    "directional-intensity": "1",
+    "directional-color": "#ffffff",
+    "hemisphere-intensity": "0.35",
+    "hemisphere-sky-color": "#dbeafe",
+    "hemisphere-ground-color": "#1f2937",
+    "lighting-preset": "custom",
+    "tone-mapping": "aces",
+    "scale": "1",
+    "position-x": "0",
+    "position-y": "0",
+    "position-z": "0",
+    "rotation-x": "0",
+    "rotation-y": "0",
+    "rotation-z": "0",
+    "light-position-x": "1",
+    "light-position-y": "1",
+    "light-position-z": "5"
+  },
+  "videoSettings": {
+    "video-scale": "0.79",
+    "video-position-x": "0",
+    "video-position-y": "-0.06",
+    "video-position-z": "0",
+    "video-rotation-x": "0",
+    "video-rotation-y": "0",
+    "video-rotation-z": "0"
+  },
+  "animation": "",
+  "hotspots": [],
+  "socialButtons": [],
+  "models": [],
+  "videos": [
+    {
+      "fileName": "video_1.mp4",
+      "name": "Viaje Disney 2023 - Disney 10 MB.mp4",
+      "hidden": false,
+      "locked": false,
+      "targetIndex": 0,
+      "settings": {
+        "scale": 0.68,
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0.1
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "fileName": "image_1.png",
+      "name": "Mickey_Mouse_PNG_Clip-Art_Image.png",
+      "hidden": false,
+      "locked": false,
+      "targetIndex": 0,
+      "settings": {
+        "scale": 0.63,
+        "position": {
+          "x": -0.66,
+          "y": -0.04,
+          "z": 0.16
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    },
+    {
+      "fileName": "image_2.png",
+      "name": "sombra-16_9.png",
+      "hidden": false,
+      "locked": false,
+      "targetIndex": 0,
+      "settings": {
+        "scale": 0.79,
+        "position": {
+          "x": 0,
+          "y": -0.06,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
+      }
+    }
+  ],
+  "audios": [],
+  "videoFileName": "video_1.mp4",
+  "videoName": "Viaje Disney 2023 - Disney 10 MB.mp4"
+}
